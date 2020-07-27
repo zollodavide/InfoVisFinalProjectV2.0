@@ -1,0 +1,211 @@
+<!doctype html>
+<html>
+<head>
+	<script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+</head>
+<body style="background-color: wheat;">
+  
+	<!-- Create a div where the graph will take place -->
+	<h1 style="font-family: Arial, Helvetica, sans-serif; text-align: center;">Reddito Medio di ogni Stato</h1>
+	<!-- Create a div where the graph will take place -->
+
+
+
+  <div style="border-color: black; border-width: 1px; border: solid;  background-color: white; margin: auto;">
+    <div id="tool2" style="height: 80px; font-size: 30px; font-family: Arial, Helvetica, sans-serif;"></div>
+    <svg style=" width: 1500px;height: 1000px;  background-color: white;" id="my_dataviz"></svg>	
+</div>
+
+<div style="border-color: black; border-width: 1px; border: solid;  background-color: white; margin: auto;">
+  <div id="tool" style="height: 80px; font-size: 30px; font-family: Arial, Helvetica, sans-serif;"></div>
+  <svg display="none" style="margin: auto; width: 1000px;height: 1000px;  background-color: white;" id="my_dataviz2"></svg>	
+</div>
+
+
+
+
+
+<script>
+		// The svg
+    var svg = d3.select("#my_dataviz")
+    var width=2000
+    var height =2000
+    // Map and projection
+    var path = d3.geoPath();
+    var projection = d3.geoMercator()
+        .scale(1000)
+        .center([0,20])
+        .translate([2520,850]);
+
+
+// Data and color scale<
+var data = d3.map();
+var codes = d3.map();
+var colorScale = 
+d3.scaleLinear()
+  .domain([0, 85000])
+  .range(["#e8edff","#0000ff"]);
+  // d3.scaleQuantize([5, 30], d3.schemeBlues[9])
+  // MIN rgb(202, 207, 255) - 8.19
+  // MAX rgb(29, 30, 255) - 26.88
+// Load external data and boot
+d3.queue()
+  .defer(d3.json, "JSONs/states.json")
+  .defer(d3.csv, "CSVs/state2Income.csv", function(d) { 
+    data.set(d.Name, +d.Income); 
+    codes.set(d.Name, d.Code);})
+  .await(ready);
+
+function ready(error, topo) {
+
+
+  let mouseOver = function(d) {
+    d3.selectAll(".State")
+      .transition()
+      .duration(200)
+      .style("opacity", .5);
+    d3.select(this)
+      .transition()
+      .duration(200)
+      .style("opacity", 1)
+      .style("stroke", "black");
+    tooltip
+      .html("<b>Stato: </b>" + d.properties.NAME + "<br>" + "<b>Reddito Medio: </b>" + Math.round(data.get(d.properties.NAME)) +"$")
+      .style("opacity", 1);
+  }
+
+  let mouseLeave = function(d) {
+    d3.selectAll(".State")
+      .transition()
+      .duration(200)
+      .style("opacity", .8);
+    d3.select(this)
+      .transition()
+      .duration(200)
+      .style("stroke", "transparent");
+    tooltip
+			.style("opacity", 0);
+  }
+
+  let click = function(d) {
+    console.log()  
+    console.log(data)  
+
+    next(codes.get(d.properties.NAME))
+  }
+
+
+  // Draw the map
+  svg.append("g")
+    .selectAll("path")
+    .data(topo.features)
+    .enter()
+    .append("path")
+    .on("mouseover", mouseOver )
+    .on("mouseleave", mouseLeave )
+    .on("click", click)
+      // draw each country
+      .attr("d", d3.geoPath()
+        .projection(projection)
+      )
+      // set the color of each state
+      .attr("fill", function (d) {
+        return colorScale(data.get(d.properties.NAME));
+      });
+    }
+
+    // ----------------
+		// Create a tooltip
+		// ----------------
+		var tooltip = d3.select("#tool2")
+			.append("div")
+			.style("opacity", 0)
+			.attr("class", "tooltip")
+			.style("padding", "10px")
+			.style("text-align", "center")
+
+
+
+function next(name) {
+
+    // set the dimensions and margins of the graph
+var margin = {top: 30, right: 30, bottom: 70, left: 30},
+    width = 1000 - margin.left - margin.right,
+    height = 1000 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg2 = d3.select("#my_dataviz2")
+  .attr("display","block")
+  .append("g")
+  .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
+
+// Parse the Data
+d3.csv("CSVs/city2poverty.csv", function(data) {
+
+
+//FILTERING PER STATO
+var data2 = data.filter(function(d) {return d.State == name && d.Poverty != "0.0"; })
+
+//SORT IN BASE ALLA PORVERTÁ
+data2 = data2.sort(function(x, y){ return d3.ascending(parseFloat(x.Poverty), parseFloat(y.Poverty));})
+
+//PRENDO IL TOP 15
+data2 = data2.filter(function(d,i) {return i<15; })
+
+
+console.log(data2)
+// X axis
+var x = d3.scaleBand()
+  .range([ 0, width ])
+  .domain(data2.map(function(d) { return d.City; }))
+  .padding(0.2);
+svg2.append("g")
+  .attr("transform", "translate(0," + height + ")")
+  .call(d3.axisBottom(x))
+  .selectAll("text")
+    .attr("transform", "translate(-10,0)rotate(-45)")
+    .style("text-anchor", "end");
+
+// Add Y axis
+var y = d3.scaleLinear()
+  .domain([0, 5])
+  .range([ height, 0]);
+svg2.append("g")
+  .call(d3.axisLeft(y));
+
+
+  svg2.append("text")
+    .attr("text-anchor", "end")
+    .attr("x", width)
+    .attr("y", height + margin.top + 20)
+    .style("font-family","Arial, Helvetica, sans-serif")
+    .text("Città");
+
+    // svg2.append("text")
+    // .attr("text-anchor", "end")
+    // .attr("transform", "rotate(-90)")
+    // .attr("y", -margin.left+20)
+    // .attr("x", -margin.top)
+    // .style("font-family","Arial, Helvetica, sans-serif")
+    // .text("Vittime ogni 100.000 Abitanti")
+// Bars
+
+svg2.selectAll("mybar")
+  .data(data2)
+  .enter()
+  .append("rect")
+    .attr("x", function(d) { return x(d.City); })
+    .attr("y", function(d) { return y(d.Poverty); })
+    .attr("width", x.bandwidth())
+    .attr("height", function(d) { return height - y(d.Poverty); })
+    .attr("fill", "#69b3a2")
+
+})
+}    
+
+  </script>
+</body>
+</html>
