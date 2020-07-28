@@ -1,58 +1,101 @@
-<!DOCTYPE HTML>
-<html xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html>
 <head>
-<title>Tech4CH: Hecht Museum</title>
-
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link
-		href="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css"
-		rel="stylesheet" id="bootstrap-css">
-	<script
-		src="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
-	<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
-	<link rel="stylesheet"
-		href="https://fonts.googleapis.com/icon?family=Material+Icons">
-	<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
-	<!-- <link href="styles.css" rel="stylesheet">
-	<script src="bootsnipp.js"></script>
-	<script src="bootsnipp.min.js"></script> -->
+    <script src="https://d3js.org/d3.v4.min.js"></script>
 </head>
-<body>
 
-	
-	<div id="wrapper">
-		<!-- Sidebar -->
-	
-		<!-- Page content -->
-		<div id="page-content-wrapper">
-			<div class="page-content inset" data-spy="scroll" data-target="#spy">
-				<div class="row">
-									<div class="jumbotron text-center">
-				
-				
-				<h2 class="text-center">Replay a Visit</h2>
-	<h3 class="text-center">Search by Visitor ID</h3>
-	
-	<form th:action="@{/replayVisit}" method="post" th:object="${visitor}"  class="text-center">
-		<input type="text" th:field="*{id}">
-		<i class="material-icons" style="font-size: 35px; text-align: center;vertical-align: middle;">person</i>
-		<h3 class="text-center">or</h3>
-		<h3 class="text-center">Search by Group ID</h3>
-		<input type="text" th:field="*{group}">
-		<i class="material-icons" style="font-size: 35px; text-align: center;vertical-align: middle;">group</i> 
-		<div></div>
-		<input type="submit" value="Search" ></input>
-	</form>
-					</div>
+<body style="background-color: white;">
 
-					<div class="navbar navbar-default navbar-static-bottom" style="margin-top: 50px">
-						<p class="navbar-text pull-left" >Built by Davide Zollo and
-							Shahrzad Fakour Fard</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    
+<!-- Add 2 buttons -->
+<button onclick="update('var1')">Variable 1</button>
+<button onclick="update('var2')">Variable 2</button>
+    <!-- Create a div where the graph will take place -->
+    <h1 style="font-family: Arial, Helvetica, sans-serif; text-align: center;">Stati più pericolosi</h1>
+    <!-- Create a div where the graph will take place -->
+	<div style="border-color: black; border-width: 1px; border: solid; width: 700px; margin: auto; background-color: white;"
+    id="my_dataviz">
+    
+    </div>
+
+<script>
+    
+    // set the dimensions and margins of the graph
+var margin = {top: 30, right: 30, bottom: 70, left: 60},
+    width = 460 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+// Parse the Data
+d3.csv("CSVs/combined2.csv", function(data) {
+
+    data = data.filter(function(d,i) {return i<10; })
+
+// X axis
+var x = d3.scaleBand()
+  .range([ 0, width ])
+  .domain(data.map(function(d) { return d.City; }))
+  .padding(0.2);
+svg.append("g")
+  .attr("transform", "translate(0," + height + ")")
+  .call(d3.axisBottom(x))
+  .selectAll("text")
+    .attr("transform", "translate(-10,0)rotate(-45)")
+    .style("text-anchor", "end");
+
+// Add Y axis
+var y = d3.scaleLinear()
+  .domain([0, 85000])
+  .range([ height, 0]);
+svg.append("g")
+  .call(d3.axisLeft(y));
 
 
-</body>
+  svg.append("text")
+    .attr("text-anchor", "end")
+    .attr("x", width)
+    .attr("y", height + margin.top + 20)
+    .style("font-family","Arial, Helvetica, sans-serif")
+    .text("Stato");
+
+    svg.append("text")
+    .attr("text-anchor", "end")
+    .attr("transform", "rotate(-90)")
+    .attr("y", -margin.left+20)
+    .attr("x", -margin.top)
+    .style("font-family","Arial, Helvetica, sans-serif")
+    .text("Vittime ogni 100.000 Abitanti")
+// Bars
+svg.selectAll("mybar")
+  .data(data)
+  .enter()
+  .append("rect")
+    .attr("x", function(d) { return x(d.City); })
+    .attr("y", function(d) { return y(d.Income); })
+    .attr("width", x.bandwidth())
+    .attr("height", function(d) { return height - y(d.Income); })
+    .attr("fill", "#69b3a2")
+    .on("click", click)
+
+
+})
+
+  let click = function(d) {
+    console.log(d)  
+  }
+
+
+</script>
+
+
+
+
+</html>
