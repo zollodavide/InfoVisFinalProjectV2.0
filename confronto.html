@@ -8,6 +8,7 @@
 <body style="background-color: white;">
 
 
+
 <!-- Add 2 buttons -->
 <button onclick="update('Income')">Median Income</button>
 <button onclick="update('Poverty')">Poverty Rate</button>
@@ -19,8 +20,8 @@
 <div style="margin: auto;" Id="my_dataviz">
 </div>
 
-<div style="margin: auto;">
-    <div style="margin: auto; display: inline-block;">
+<div style="margin: auto;" >
+    <div style="margin: auto; display: none;" id="div1">
         <div>
             <b >Stato: </b>
             <a id="state"></a>
@@ -30,9 +31,17 @@
             <a id="city"></a>
         </div>
         <svg width="500" height="500" id="confronto"></svg>
+        <div style="text-align: center;">
+            <b >Poverty Rate: </b>
+            <a id="poverty"></a>
+        </div>
+        <div style="text-align: center;">
+            <b >Highschool Rate: </b>
+            <a id="highschool"></a>
+        </div>
     </div>
    
-    <div style="margin: auto; display: inline-block;" >
+    <div style="margin: auto; display: none;" id="div2" >
         <div>
             <b >Stato: </b>
             <a id="state2"></a>
@@ -40,17 +49,53 @@
         <div>
             <b >Città: </b>
             <a id="city2"></a>
-
         </div>
         <svg width="500" height="500" id="confronto2"></svg>
-
+        <div style="text-align: center;">
+            <b >Poverty Rate: </b>
+            <a id="poverty2"></a>
+        </div>
+        <div style="text-align: center;">
+            <b >Highschool Rate: </b>
+            <a id="highschool2"></a>
+        </div>
     </div>
+
+    <div style="margin: auto; display: inline-block;" >
+        <svg id="leggenda"></svg>
+    </div>
+</div>
+
+<div style="margin: auto; display: none; " id="conftext">
+    <h1 style="font-family: Arial, Helvetica, sans-serif; text-align: center;" >Confronto</h1>
+    <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
+        <a  >La citta </a>
+        <b  id="citystateA"> </b>
+        <a > rispetto alla citta </a>
+        <b  id="citystateB"> </b>
+        <a  > ha le seguenti caratteristiche </a>
+    </div>
+
+    <div  style="margin-top: 30px; font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
+        <b >Median Income: </b>
+        <a id="conf_income"></a>
+    </div>
+    <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
+        <b >Poverty Rate: </b>
+        <a id="conf_poverty"></a>
+    </div>
+
+    <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
+        <b >Highschool Rate: </b>
+        <a id="conf_highschool"></a>
+    </div>
+
 </div>
 
 <script>
 
 // set the dimensions and margins of the graph
-var margin = {top: 30, right: 30, bottom: 70, left: 60},
+var margin = {top: 30, right: 30, bottom: 70, left: 90},
     width = 1000 - margin.left - margin.right,
     height = 800 - margin.top - margin.bottom;
 
@@ -64,19 +109,20 @@ var svg = d3.select("#my_dataviz")
             "translate(" + margin.left + "," + margin.top + ")");
 
 // Initialize the X axis
-var x = d3.scaleBand()
-    .range([ 0, width ])
-    .padding(0.2);
+var x = d3.scaleLinear()
+    .range([ 0, width]);
 var xAxis = svg.append("g")
     .attr("transform", "translate(0," + height + ")")
 
 // Initialize the Y axis
-var y = d3.scaleLinear()
-    .range([ height, 0]);
+var y = d3.scaleBand()
+    .range([ 0, height ])
+    .padding(.2);
 var yAxis = svg.append("g")
-    .attr("class", "myYaxis")
+    .attr("class", "myYaxis");
 
-
+var leftCity = null
+var rightCity = null
 
 // A function that create / update the plot for a given variable:
 function update(selectedVar) {
@@ -87,11 +133,14 @@ function update(selectedVar) {
     data = data.filter(function(d,i) {return i<10; })
 
     // X axis
-    x.domain(data.map(function(d) { return d.City; }))
+    x.domain([0, d3.max(data, function(d) { return +d[selectedVar] }) ]);
     xAxis.transition().duration(1000).call(d3.axisBottom(x))
-
+      .selectAll("text")
+      .attr("transform", "translate(-10,0)rotate(-45)")
+      .style("text-anchor", "end");
+    
     // Add Y axis
-    y.domain([0, d3.max(data, function(d) { return +d[selectedVar] }) ]);
+    y.domain(data.map(function(d) { return d.City; }))
     yAxis.transition().duration(1000).call(d3.axisLeft(y));
 
     // variable u: map data to existing bars
@@ -107,21 +156,45 @@ function update(selectedVar) {
         .merge(u)
         .transition()
         .duration(1000)
-        .attr("x", function(d) { return x(d.City); })
-        .attr("y", function(d) { return y(d[selectedVar]); })
-        .attr("width", x.bandwidth())
-        .attr("height", function(d) { return height - y(d[selectedVar]); })
-        .attr("fill", "#69b3a2")
+        .attr("x", function(d) { return x(0)})
+        .attr("y", function(d) { return y(d.City); })
+        .attr("height", y.bandwidth())
+        .attr("width", function(d) { return x(d[selectedVar]) ; })
+        .attr("fill", "#69b3a2");
+
+        svg.selectAll(".bartext")
+            .data(data)
+            .enter()
+            .append("text")
+            .attr("class", "bartext")
+            .attr("fill", "black")
+            .style("font-family", "Arial, Helvetica, sans-serif")
+            .style("font-weight", "bold")
+            .attr("x", function(d,i) {
+                return x(0)+ 20;
+            })
+            .attr("y", function(d,i) {
+                return y(d.City)+33;
+            })
+            .text(function(d){
+                return d.City + ", " + d.State;
+            });
     })
 
     let click = function(d) {
         d3.select("#confronto").selectAll("*").remove();
         clickConfronto(d)
+        d3.select("#div1").style("display", "inline-block");
+        rightCity = d;
+        updateConfronto()
     }
 
     let leftClick = function(d) {
         d3.select("#confronto2").selectAll("*").remove();
         leftClickConfronto(d)
+        d3.select("#div2").style("display", "inline-block") ;
+        leftCity = d;
+        updateConfronto()
     }
 
 }
@@ -135,6 +208,10 @@ function clickConfronto(d) {
         .text(d.State)
     d3.select("#city")
         .text(d.City)
+    d3.select("#poverty")
+        .text(d.Poverty + "%")
+    d3.select("#highschool")
+        .text(d.Highschool + "%")
     
     var width = 500
         height = 500
@@ -148,7 +225,7 @@ function clickConfronto(d) {
 // set the color scale
 var color = d3.scaleOrdinal()
   .domain(dat)
-  .range(d3.schemeSet2);
+  .range(["#1f77b4","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"]);
 
 // Compute the position of each group on the pie:
 var pie = d3.pie()
@@ -170,12 +247,7 @@ svg2
   .style("stroke-width", "2px")
   .style("opacity", 0.7)
 
-// var arcGenerator = d3.arc()
-//   .innerRadius(0)
-//   .outerRadius(radius)
 }
-
-
 
 function leftClickConfronto(d) {
 
@@ -186,6 +258,10 @@ d3.select("#state2")
     .text(d.State)
 d3.select("#city2")
     .text(d.City)
+d3.select("#poverty2")
+    .text(d.Poverty + "%")
+d3.select("#highschool2")
+    .text(d.Highschool + "%")
 
 var width = 500
     height = 500
@@ -199,7 +275,7 @@ var radius = Math.min(width, height) / 2 - margin
 // set the color scale
 var color = d3.scaleOrdinal()
 .domain(dat)
-.range(d3.schemeSet2);
+.range(["#1f77b4","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"]);
 
 // Compute the position of each group on the pie:
 var pie = d3.pie()
@@ -221,24 +297,67 @@ svg2
 .style("stroke-width", "2px")
 .style("opacity", 0.7)
 
-// var arcGenerator = d3.arc()
-//   .innerRadius(0)
-//   .outerRadius(radius)
+}
+
+var colorePercentuale = d3.scaleQuantize()
+    .domain([-1000,1000])
+    .range(["red", "green"])
+
+var colorePercentualeInverse = d3.scaleQuantize()
+    .domain([-1000,1000])
+    .range(["green", "red"])
+
+
+function updateConfronto() {
+    if (leftCity == null || rightCity == null){
+        return;
+    }
+
+    d3.select("#conftext").style("display", "inline-block") ;
+
+
+    d3.select("#citystateA")
+        .text(leftCity.City + ", " + leftCity.State)
+    d3.select("#citystateB")
+        .text(rightCity.City + ", " + rightCity.State)
+
+    var income_p = variazionePercentuale(leftCity.Income, rightCity.Income) 
+    var poverty_p = variazionePercentuale(leftCity.Poverty, rightCity.Poverty) 
+    var highschool_p = variazionePercentuale(leftCity.Highschool, rightCity.Highschool) 
+
+    if (income_p >0) income_p = "+"+income_p
+    if (poverty_p >0) poverty_p = "+"+poverty_p
+    if (highschool_p >0) highschool_p = "+"+highschool_p
+
+    d3.select("#conf_income")
+        .text(income_p+"%" )
+        .style("color", colorePercentuale(income_p))
+    d3.select("#conf_poverty")
+        .text(poverty_p+"%")
+        .style("color", colorePercentualeInverse(poverty_p))
+    d3.select("#conf_highschool")
+        .text(highschool_p+"%")
+        .style("color", colorePercentuale(highschool_p))
+
 }
 
 
-//   svg2
-//   .selectAll('slices')
-//   .data(data_ready)
-//   .enter()
-//   .append('text')
-//   .text(function(d){ return d.data.key})
-//   .attr("transform", function(d) { return "translate(" + arcGenerator.centroid(d) + ")";  })
-//   .style("text-anchor", "middle")
-//   .style("font-size", 17)
+// LEGGENDA DA FARE
+// var svg3 = d3.select("#leggenda");
+// svg3.append("circle").attr("r", 6).style("fill", "#377eb8")
+// svg3.append("circle").attr("r", 6).style("fill", "#4daf4a")
+
+// svg3.append("text").attr("x", 390).attr("y", 30).text("Locale").style("font-size", "15px").attr("alignment-baseline","middle")
+// svg3.append("text").attr("x", 390).attr("y", 60).text("Cluster C5").style("font-size", "15px").attr("alignment-baseline","middle")
+// svg3.append("text").attr("x", 390).attr("y", 90).text("Cluster M5").style("font-size", "15px").attr("alignment-baseline","middle")
 
 // Initialize plot
 update('Income')
+
+function variazionePercentuale(valA, valB){
+    var tot = (valA - valB)/valB;
+    return (Math.round((tot * 100) *100)/100);
+}
 
 </script>
 
