@@ -1,0 +1,124 @@
+<!doctype html>
+<meta charset="utf-8">
+
+<html>
+<head>
+	<script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+</head>
+<body style="background-color: wheat;">
+
+  <button onclick="aggiorna()">Send</button>
+
+  
+  <h1>Richieste dell'utente</h1>
+  <form>
+    <fieldset>
+      <legend>Input dell'utente</legend>
+      <p>
+        <label>Income</label>
+        <input type = "text"
+               id = "incomeId" 
+               placeholder = "text here" /> 
+
+        <label>Poverty</label>
+        <input type = "text"
+              id = "povertyId"
+              placeholder = "text here" />
+
+        <label>HighSchool</label>
+        <input type = "text"
+              id = "hsId"
+              placeholder = "text here" />
+
+      </p>
+  
+
+
+  <div style="border-color: black; border-width: 1px; border: solid;  background-color: white; margin: auto;">
+    <div id="tool2" style="height: 80px; font-size: 30px; font-family: Arial, Helvetica, sans-serif;"></div>
+    <svg style=" width: 1500px;height: 1000px;  background-color: white;" id="my_dataviz"></svg>	
+</div>
+
+<div style="border-color: black; border-width: 1px; border: solid;  background-color: white; margin: auto;">
+  <div id="tool" style="height: 80px; font-size: 30px; font-family: Arial, Helvetica, sans-serif;"></div>
+  <svg display="none" style="margin: auto; width: 1000px;height: 1000px;  background-color: white;" id="my_dataviz2"></svg>	
+</div>
+
+<script>
+
+function aggiorna(){
+
+
+  d3.csv("CSVs/combined2.csv", function(data) {
+
+    var income_insert = document.getElementById("incomeId").value
+    var poverty_insert = document.getElementById("povertyId").value
+    var hs_insert = document.getElementById("hsId").value
+
+    data.forEach(function(d) {
+    d.Income = +d.Income;
+    });
+
+    var max_income = d3.max(data, function(d) { return d.Income; });
+    var min_income = d3.min(data, function(d){ return d.Income});
+
+    //Ora vado a normalizzare i valori 
+
+    //var normalize_income = []
+    var all_value_combined = []
+    var cities = []
+    var city_value = {}
+    var cities_states = []
+
+
+    data.forEach(function(d,i){
+
+      var city = d.City
+      var state = d.State
+
+      city_state = state + ',' + city
+
+      normalize_value_income = (((d.Income - min_income)/(max_income - min_income)) *(income_insert))
+
+      normalie_value_hs = ((d.Highschool/100)*(hs_insert))
+  
+
+      var poverty = d.Poverty
+      var scale_poverty = d3.scaleLinear().domain([0,100]).range([1,0])
+      var poverty_norm = scale_poverty(poverty)
+      var poverty_with_user = (poverty_norm * poverty_insert)
+
+      normalize_hs_in_poverty = normalize_value_income + normalie_value_hs + poverty_with_user
+
+      city_value[city_state] = normalize_hs_in_poverty;
+
+    })
+
+    console.log(city_value)
+
+  })  
+
+
+}
+
+ 
+
+
+
+  //Ora non posso fare un sort di un object devo cambaire l'object in array !!!   
+  //Nell HTML DEVO METTERE 3 BOX DOVE POSSO SCRIVERE NUMERI (INCOME POVERTÀ E SCOLARIZZAZIONE, NUMERI COMPRESI TRA 0 E 100) UTENTE SCRIVE I 3 NUMERI PREME BOTTONE, APPENA PREME SI AVVIA L EQUAZIONE
+  //utilizzando il numero associato come peso dell'equazione (income per il numero scritto dall'utente e così via)
+
+
+    
+
+ 
+
+ </script>
+ </fieldset>
+</form>
+</body>
+
+</html>
