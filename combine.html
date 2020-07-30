@@ -68,15 +68,20 @@ function aggiorna(){
 
     //var normalize_income = []
     var all_value_combined = []
-    var cities = []
+   // var cities = []
     var city_value = {}
     var cities_states = []
-
 
     data.forEach(function(d,i){
 
       var city = d.City
       var state = d.State
+    
+
+      all_value  = state + ',' + city + ',' + d.Income + ',' + d.Highschool + ',' + d.White + ',' + d.Black + ',' + d.Hispanic + ',' + d.Asian + ',' + d.Native
+      //Lista che contiene tutti i valori del CSV
+      all_value_combined.push(all_value)
+
 
       city_state = state + ',' + city
 
@@ -94,9 +99,24 @@ function aggiorna(){
 
       city_value[city_state] = normalize_hs_in_poverty;
 
+
+
+
     })
 
-    console.log(city_value)
+    //Prese migliori 15 città in base ai calcoli effettuati
+    var sortable = [];
+    for (var sorted in city_value) {
+        sortable.push([sorted, city_value[sorted]]);
+    }
+
+    sortable.sort(function(a, b) { //Cosi ordinato in maniera decrescente 
+        return b[1] - a[1];
+    });
+
+    best_city = sortable.filter(function(d,i) {return i<15; })
+
+    console.log(all_value_combined)
 
   })  
 
@@ -107,9 +127,7 @@ function aggiorna(){
 
 
 
-  //Ora non posso fare un sort di un object devo cambaire l'object in array !!!   
-  //Nell HTML DEVO METTERE 3 BOX DOVE POSSO SCRIVERE NUMERI (INCOME POVERTÀ E SCOLARIZZAZIONE, NUMERI COMPRESI TRA 0 E 100) UTENTE SCRIVE I 3 NUMERI PREME BOTTONE, APPENA PREME SI AVVIA L EQUAZIONE
-  //utilizzando il numero associato come peso dell'equazione (income per il numero scritto dall'utente e così via)
+  //ORDINARE LE CITTA IN BASE AL VALORE CHE VIENE FUORI DALL'EQUAZIONE PESATA PRENDERE LE MIGLIORI 15
 
 
     
