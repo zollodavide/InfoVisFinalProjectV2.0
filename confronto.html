@@ -7,10 +7,24 @@
 
 <body style="background-color: white;">
 
+    <!-- 
+    TODO:
+        - LEGGENDA CON VALORI NEI PIE PLOT
+        - ALERT NEI PARAMETRI 
+    -->
+    
     <div id="testo_in">
 
         <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
             <a  >Inserisci dei valori tra 1 e 100 riferiti a quali di queste caratteristiche ti interessano di più</a>
+        </div>
+
+        <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
+            <a  >0 vuol dire che non ti interessa mentre 100 vuol dire che è la caratteristica principale di interesse</a>
+        </div>
+
+        <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
+            <a  >Con 100 si mostreranno i migliori risultati per quella caratteristica</a>
         </div>
         
         <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center; ">
@@ -41,19 +55,23 @@
         <svg style=" width: 1500px;height: 1000px;  background-color: white;" id="map_svg"></svg>	
     </div>
 
+<div style="margin: auto;font-family: Arial, Helvetica, sans-serif; margin-bottom: 30px; margin-top: 20px; display: none;" id="errore">
+    <b style="color: red;">Inserisci dei valori validi</b>
+</div>
+
 <div style="margin: auto;font-family: Arial, Helvetica, sans-serif; margin-bottom: 30px; margin-top: 20px;" id="parametri">
     <form action="setParameters()" >
         <div>
             <b>Reddito: </b>
-            <input type="number" value="50" min="1"required max="100" id="input_redd"><input/>
+            <input type="number" value="50" min="0"required max="100" id="input_redd"/>
         </div>
         <div>
             <b>Tasso di Povertà: </b>
-            <input type="number" value="50" required min="1" max="100" id="input_pove"><input/>
+            <input type="number" value="50" required min="0" max="100" id="input_pove"/>
         </div>
         <div>
             <b>Tasso di Scolarizzazione: </b>
-            <input type="number" value="50" required min="1" max="100" id="input_scol"><input/>
+            <input type="number" value="50" required min="0" max="100" id="input_scol"/>
         </div>
         <input type="button" value="Submit" onclick="setParameters()"/>
     </form>
@@ -149,6 +167,8 @@
     d3.csv("CSVs/combined2.csv", function(data) {
         all_data = data;
     })
+    var filtered_data = all_data;
+
     // The svg
     var svg_m = d3.select("#map_svg")
     var width_m=2000
@@ -264,39 +284,95 @@ function ready(error, topo) {
 			.style("text-align", "center")
 
 
+var final_list = [];
+
 function setParameters(){
     // VALIDATE
+
+    if (filtered_data == undefined)
+        filtered_data = all_data;
+
     var redd = parseFloat(document.getElementById("input_redd").value);
     var scol = parseFloat(document.getElementById("input_scol").value);
     var pove = parseFloat(document.getElementById("input_pove").value);
 
-    if(redd<101 && redd>0 && pove<101 && pove>0 && scol<101 && scol>0){
+    if(redd<101 && redd>-1 && pove<101 && pove>-1 && scol<101 && scol>-1){
         // AVVIA EQUAZIONE PESATA CON I VALORI E MOSTRA BARPLOT
-        // SOVRASCRIVI filtered_data
+
         d3.select("#barplot_d")
             .style("display","block")
+        d3.select("#errore")
+            .style("display","none")  
+
+            var max_income = 250000
+            var min_income = 2500
+
+            //Ora vado a normalizzare i valori 
+
+            //var normalize_income = []
+            var all_value_combined = []
+            // var cities = []
+            var city_value = {}
+            var cities_states = []
+
+            filtered_data.forEach(function(d,i){
+
+            var city = d.City
+            var state = d.State
+
+
+            all_value  = state + ',' + city + ',' + d.Income + ',' + d.Highschool + ',' + d.White + ',' + d.Black + ',' + d.Hispanic + ',' + d.Asian + ',' + d.Native
+            //Lista che contiene tutti i valori del CSV
+            all_value_combined.push(all_value)
+
+
+            city_state = state + ',' + city
+
+            normalize_value_income = (((d.Income - min_income)/(max_income - min_income)) *(redd))
+
+            var normalie_value_hs = ((d.Highschool/100)*(scol))
+
+
+            var poverty = d.Poverty
+            var scale_poverty = d3.scaleLinear().domain([0,100]).range([1,0])
+            var poverty_norm = scale_poverty(poverty)
+            var poverty_with_user = (poverty_norm * pove)
+
+            normalize_hs_in_poverty = normalize_value_income + normalie_value_hs + poverty_with_user
+
+            city_value[city_state] = normalize_hs_in_poverty;
+
+
+            })
+
+            //Prese migliori 15 città in base ai calcoli effettuati
+            var sortable = [];
+            for (var sorted in city_value) {
+                sortable.push([sorted, city_value[sorted]]);
+            }
+
+            sortable.sort(function(a, b) { //Cosi ordinato in maniera decrescente 
+                return b[1] - a[1];
+            });
+
+            best_city = sortable.filter(function(d,i) {return i<15; })
+
+            best_city.forEach(function(d){
+                var st = d[0].split(",")[0]
+                var ct =d[0].split(",")[1]
+
+                var l = filtered_data.find(function(d) {return (d.State === st && d.City===ct)});
+                final_list.push(l);
+
+            })
 
     }
     else {
-        // SHOW ALERT
+        d3.select("#errore")
+            .style("display","block")  
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -367,7 +443,7 @@ function update(selectedVar) {
         updateConfronto()
     }
 
-    var data = filtered_data.filter(function(d,i) {return i<10; })
+    var data = final_list;
 
     // X axis
     x.domain([0, d3.max(data, function(d) { return +d[selectedVar] }) ]);
@@ -411,7 +487,7 @@ function update(selectedVar) {
                 return x(0)+ 20;
             })
             .attr("y", function(d,i) {
-                return y(d.City)+33;
+                return y(d.City)+25;
             })
             .text(function(d){
                 return d.City + ", " + d.State;
@@ -466,6 +542,7 @@ svg2
   .attr("stroke", "black")
   .style("stroke-width", "2px")
   .style("opacity", 0.7)
+
 
 }
 
