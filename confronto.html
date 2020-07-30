@@ -7,19 +7,69 @@
 
 <body style="background-color: white;">
 
+    <div id="testo_in">
+
+        <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
+            <a  >Inserisci dei valori tra 1 e 100 riferiti a quali di queste caratteristiche ti interessano di più</a>
+        </div>
+        
+        <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center; ">
+            <a>Oppure scegli prima uno stato</a>
+            <button onclick="apriMappa()">Apri Mappa</button>
+        </div>
+    </div>
 
 
-<!-- Add 2 buttons -->
-<button onclick="update('Income')">Median Income</button>
-<button onclick="update('Poverty')">Poverty Rate</button>
-<button onclick="update('Highschool')">Highschool Rate</button>
+    <div id="testo_sec" style="display: none;">
+        
+        <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center; ">
+            <a>Stato scelto:</a>
+            <b id="nome_stato"></b>
+        </div>
 
-<!-- Create a div where the graph will take place -->
-<!-- <h1 style="font-family: Arial, Helvetica, sans-serif; text-align: center;">Stati più pericolosi</h1> -->
-<!-- Create a div where the graph will take place -->
-<div style="margin: auto;" Id="my_dataviz">
+        <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
+            <a  >Inserisci dei valori tra 1 e 100 riferiti a quali di queste caratteristiche ti interessano di più</a>
+        </div>
+        
+    </div>
+
+    <div style="margin: auto; display: none;" id="mappa" >
+        <div>
+            <a  style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center; margin: auto;" >Seleziona lo stato dove vuoi trasferirti</a>
+        </div>
+        <div id="tool2" style="height: 80px; font-size: 30px; font-family: Arial, Helvetica, sans-serif;"></div>
+        <svg style=" width: 1500px;height: 1000px;  background-color: white;" id="map_svg"></svg>	
+    </div>
+
+<div style="margin: auto;font-family: Arial, Helvetica, sans-serif; margin-bottom: 30px; margin-top: 20px;" id="parametri">
+    <form action="setParameters()" >
+        <div>
+            <b>Reddito: </b>
+            <input type="number" value="50" min="1"required max="100" id="input_redd"><input/>
+        </div>
+        <div>
+            <b>Tasso di Povertà: </b>
+            <input type="number" value="50" required min="1" max="100" id="input_pove"><input/>
+        </div>
+        <div>
+            <b>Tasso di Scolarizzazione: </b>
+            <input type="number" value="50" required min="1" max="100" id="input_scol"><input/>
+        </div>
+        <input type="button" value="Submit" onclick="setParameters()"/>
+    </form>
 </div>
 
+
+<div id ="barplot_d" style="display: none;">
+
+    <button onclick="update('Income')">Median Income</button>
+    <button onclick="update('Poverty')">Poverty Rate</button>
+    <button onclick="update('Highschool')">Highschool Rate</button>
+    
+    <div style="margin: auto;" Id="my_dataviz">
+    </div>
+    
+</div>
 <div style="margin: auto;" >
     <div style="margin: auto; display: none;" id="div1">
         <div>
@@ -93,6 +143,179 @@
 </div>
 
 <script>
+     
+    var all_data;
+    
+    d3.csv("CSVs/combined2.csv", function(data) {
+        all_data = data;
+    })
+    // The svg
+    var svg_m = d3.select("#map_svg")
+    var width_m=2000
+    var height_m =2000
+    // Map and projection
+    var path = d3.geoPath();
+    var projection = d3.geoMercator()
+        .scale(1000)
+        .center([0,20])
+        .translate([2520,850]);
+
+// Data and color scale<
+var data_m = d3.map();
+var codes = d3.map();
+var colorScale = 
+d3.scaleLinear()
+  .domain([0, 85000])
+  .range(["#e8edff","#e8edff"]);
+
+d3.queue()
+  .defer(d3.json, "JSONs/states.json")
+  .defer(d3.csv, "CSVs/state2Income.csv", function(d) { 
+    data_m.set(d.Name, +d.Income); 
+    codes.set(d.Name, d.Code);})
+  .await(ready);
+
+function apriMappa(){
+    d3.select("#mappa")
+        .style("display","block");
+
+    d3.select("#parametri")
+        .style("display","none")
+    
+    d3.select("#testo_in")
+        .style("display","none")
+}
+
+function ready(error, topo) {
+
+  let mouseOver_m = function(d) {
+    d3.selectAll(".State")
+      .transition()
+      .duration(200)
+      .style("opacity", .5);
+    d3.select(this)
+      .transition()
+      .duration(200)
+      .style("opacity", 1)
+      .style("stroke", "black");
+    tooltip
+      .html("<b>Stato: </b>" + d.properties.NAME + "<br>")
+      .style("opacity", 1);
+  }
+
+  let mouseLeave_m = function(d) {
+    d3.selectAll(".State")
+      .transition()
+      .duration(200)
+      .style("opacity", .8);
+    d3.select(this)
+      .transition()
+      .duration(200)
+    tooltip
+			.style("opacity", 0);
+  }
+
+  let click_stato = function(e) {
+    filtered_data = all_data.filter(function(d) {return d.State == codes.get(e.properties.NAME) })
+    d3.select("#mappa")
+        .style("display","none");
+
+    d3.select("#parametri")
+        .style("display","block")
+        
+    d3.select("#nome_stato")
+        .text(e.properties.NAME)
+   
+    d3.select("#testo_sec")
+        .style("display","block")
+
+
+  }
+
+  // Draw the map
+  svg_m.append("g")
+    .selectAll("path")
+    .data(topo.features)
+    .enter()
+    .append("path")
+    .on("mouseover", mouseOver_m )
+    .on("mouseleave", mouseLeave_m )
+    .on("click", click_stato)
+      // draw each country
+      .attr("d", d3.geoPath()
+        .projection(projection)
+      )
+      .style("opacity", 1)
+      .style("stroke", "black")
+      // set the color of each state
+      .attr("fill", function (d) {
+        return colorScale(data_m.get(d.properties.NAME));
+      });
+    }
+
+    // ----------------
+		// Create a tooltip
+		// ----------------
+		var tooltip = d3.select("#tool2")
+			.append("div")
+			.style("opacity", 0)
+			.attr("class", "tooltip")
+			.style("padding", "10px")
+			.style("text-align", "center")
+
+
+function setParameters(){
+    // VALIDATE
+    var redd = parseFloat(document.getElementById("input_redd").value);
+    var scol = parseFloat(document.getElementById("input_scol").value);
+    var pove = parseFloat(document.getElementById("input_pove").value);
+
+    if(redd<101 && redd>0 && pove<101 && pove>0 && scol<101 && scol>0){
+        // AVVIA EQUAZIONE PESATA CON I VALORI E MOSTRA BARPLOT
+        // SOVRASCRIVI filtered_data
+        d3.select("#barplot_d")
+            .style("display","block")
+
+    }
+    else {
+        // SHOW ALERT
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // set the dimensions and margins of the graph
 var margin = {top: 30, right: 30, bottom: 70, left: 90},
@@ -128,9 +351,23 @@ var rightCity = null
 function update(selectedVar) {
 
     // Parse the Data
-    d3.csv("CSVs/combined2.csv", function(data) {
+    let click = function(d) {
+        d3.select("#confronto").selectAll("*").remove();
+        clickConfronto(d)
+        d3.select("#div1").style("display", "inline-block");
+        rightCity = d;
+        updateConfronto()
+    }
 
-    data = data.filter(function(d,i) {return i<10; })
+    let leftClick = function(d) {
+        d3.select("#confronto2").selectAll("*").remove();
+        leftClickConfronto(d)
+        d3.select("#div2").style("display", "inline-block") ;
+        leftCity = d;
+        updateConfronto()
+    }
+
+    var data = filtered_data.filter(function(d,i) {return i<10; })
 
     // X axis
     x.domain([0, d3.max(data, function(d) { return +d[selectedVar] }) ]);
@@ -179,23 +416,6 @@ function update(selectedVar) {
             .text(function(d){
                 return d.City + ", " + d.State;
             });
-    })
-
-    let click = function(d) {
-        d3.select("#confronto").selectAll("*").remove();
-        clickConfronto(d)
-        d3.select("#div1").style("display", "inline-block");
-        rightCity = d;
-        updateConfronto()
-    }
-
-    let leftClick = function(d) {
-        d3.select("#confronto2").selectAll("*").remove();
-        leftClickConfronto(d)
-        d3.select("#div2").style("display", "inline-block") ;
-        leftCity = d;
-        updateConfronto()
-    }
 
 }
 
@@ -352,7 +572,7 @@ function updateConfronto() {
 // svg3.append("text").attr("x", 390).attr("y", 90).text("Cluster M5").style("font-size", "15px").attr("alignment-baseline","middle")
 
 // Initialize plot
-update('Income')
+// update('Income')
 
 function variazionePercentuale(valA, valB){
     var tot = (valA - valB)/valB;
