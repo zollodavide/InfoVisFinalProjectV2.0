@@ -10,7 +10,6 @@
     <!-- 
     TODO:
         - LEGGENDA CON VALORI NEI PIE PLOT
-        - ALERT NEI PARAMETRI 
     -->
     
     <div id="testo_in">
@@ -249,7 +248,6 @@ function ready(error, topo) {
     d3.select("#testo_sec")
         .style("display","block")
 
-
   }
 
   // Draw the map
@@ -317,30 +315,30 @@ function setParameters(){
 
             filtered_data.forEach(function(d,i){
 
-            var city = d.City
-            var state = d.State
+                var city = d.City
+                var state = d.State
 
 
-            all_value  = state + ',' + city + ',' + d.Income + ',' + d.Highschool + ',' + d.White + ',' + d.Black + ',' + d.Hispanic + ',' + d.Asian + ',' + d.Native
-            //Lista che contiene tutti i valori del CSV
-            all_value_combined.push(all_value)
+                all_value  = state + ',' + city + ',' + d.Income + ',' + d.Highschool + ',' + d.White + ',' + d.Black + ',' + d.Hispanic + ',' + d.Asian + ',' + d.Native
+                //Lista che contiene tutti i valori del CSV
+                all_value_combined.push(all_value)
 
 
-            city_state = state + ',' + city
+                city_state = state + ',' + city
 
-            normalize_value_income = (((d.Income - min_income)/(max_income - min_income)) *(redd))
+                normalize_value_income = (((d.Income - min_income)/(max_income - min_income)) *(redd))
 
-            var normalie_value_hs = ((d.Highschool/100)*(scol))
+                var normalie_value_hs = ((d.Highschool/100)*(scol))
 
 
-            var poverty = d.Poverty
-            var scale_poverty = d3.scaleLinear().domain([0,100]).range([1,0])
-            var poverty_norm = scale_poverty(poverty)
-            var poverty_with_user = (poverty_norm * pove)
+                var poverty = d.Poverty
+                var scale_poverty = d3.scaleLinear().domain([0,100]).range([1,0])
+                var poverty_norm = scale_poverty(poverty)
+                var poverty_with_user = (poverty_norm * pove)
 
-            normalize_hs_in_poverty = normalize_value_income + normalie_value_hs + poverty_with_user
+                normalize_hs_in_poverty = normalize_value_income + normalie_value_hs + poverty_with_user
 
-            city_value[city_state] = normalize_hs_in_poverty;
+                city_value[city_state] = normalize_hs_in_poverty;
 
 
             })
@@ -373,23 +371,6 @@ function setParameters(){
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
