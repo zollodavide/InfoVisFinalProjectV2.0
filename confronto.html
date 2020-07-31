@@ -6,7 +6,6 @@
 </head>
 
 <body style="background-color: white;">
-
     <!-- 
     TODO:
         - LEGGENDA CON VALORI NEI PIE PLOT
@@ -61,23 +60,30 @@
 <div style="margin: auto;font-family: Arial, Helvetica, sans-serif; margin-bottom: 30px; margin-top: 20px;" id="parametri">
     <form action="setParameters()" >
         <div>
-            <b>Reddito: </b>
+            <b>Reddito Cercato: </b>
+            <input type="number" value="250000" min="2500"required max="250000" id="reddito_cercato"/>
+            <a>(Min: 2500$ - Max: 250000$)</a>
+        </div>
+        <div>
+            <b>Grado di Interesse Reddito: </b>
             <input type="number" value="50" min="0"required max="100" id="input_redd"/>
         </div>
         <div>
-            <b>Tasso di Povertà: </b>
+            <b> Grado di Interesse Tasso di Povertà: </b>
             <input type="number" value="50" required min="0" max="100" id="input_pove"/>
         </div>
         <div>
-            <b>Tasso di Scolarizzazione: </b>
+            <b>Grado di Interesse Tasso di Scolarizzazione: </b>
             <input type="number" value="50" required min="0" max="100" id="input_scol"/>
         </div>
-        <input type="button" value="Submit" onclick="setParameters()"/>
+        <input type="button" value="Invia" onclick="setParameters()"/>
     </form>
 </div>
 
 
 <div id ="barplot_d" style="display: none;">
+
+    <h2 style="font-family: Arial, Helvetica, sans-serif;">Migliori Risultati</h2>
 
     <button onclick="update('Income')">Median Income</button>
     <button onclick="update('Poverty')">Poverty Rate</button>
@@ -293,10 +299,10 @@ function setParameters(){
     var redd = parseFloat(document.getElementById("input_redd").value);
     var scol = parseFloat(document.getElementById("input_scol").value);
     var pove = parseFloat(document.getElementById("input_pove").value);
+    var inserted_income = parseFloat(document.getElementById("reddito_cercato").value);
 
-    if(redd<101 && redd>-1 && pove<101 && pove>-1 && scol<101 && scol>-1){
+    if(redd<101 && redd>-1 && pove<101 && pove>-1 && scol<101 && scol>-1 && inserted_income>2499 && inserted_income<250001){
         // AVVIA EQUAZIONE PESATA CON I VALORI E MOSTRA BARPLOT
-
         d3.select("#barplot_d")
             .style("display","block")
         d3.select("#errore")
@@ -307,9 +313,7 @@ function setParameters(){
 
             //Ora vado a normalizzare i valori 
 
-            //var normalize_income = []
             var all_value_combined = []
-            // var cities = []
             var city_value = {}
             var cities_states = []
 
@@ -326,10 +330,13 @@ function setParameters(){
 
                 city_state = state + ',' + city
 
-                normalize_value_income = (((d.Income - min_income)/(max_income - min_income)) *(redd))
+                var normalize = d3.scaleLinear().domain([0,247500]).range([1,0])
+                
+                var distance = Math.abs(inserted_income - d.Income)
+
+                normalize_value_income = (normalize(distance) *(redd))
 
                 var normalie_value_hs = ((d.Highschool/100)*(scol))
-
 
                 var poverty = d.Poverty
                 var scale_poverty = d3.scaleLinear().domain([0,100]).range([1,0])
@@ -363,6 +370,8 @@ function setParameters(){
                 final_list.push(l);
 
             })
+
+            update('Income')
 
     }
     else {
@@ -634,7 +643,11 @@ function updateConfronto() {
 
 function variazionePercentuale(valA, valB){
     var tot = (valA - valB)/valB;
-    return (Math.round((tot * 100) *100)/100);
+    var fin = (Math.round((tot * 100) *100)/100);
+    if (isNaN(fin))
+        return 0;
+
+    return fin;
 }
 
 </script>
