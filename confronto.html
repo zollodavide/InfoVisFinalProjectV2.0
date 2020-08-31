@@ -1,171 +1,234 @@
-<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <script src="https://d3js.org/d3.v4.min.js"></script>
-    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-</head>
+  
+  <title>Progetto Finale InfoVis</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <style>
+  body {
+    font: 20px Montserrat, sans-serif;
+    line-height: 1.8;
+    color: #f5f6f7;
+  }
+  p {font-size: 16px;}
+  .margin {margin-bottom: 45px;}
+  .bg-1 { 
+    background-color: #1abc9c; /* Green */
+    color: #ffffff;
+  }
+  .bg-2 { 
+    background-color: #474e5d; /* Dark Blue */
+    color: #ffffff;
+  }
+  .bg-3 { 
+    background-color: #a6c4cf; /* White */
+    color: #555555;
+  }
+  .bg-4 { 
+    background-color: #2f2f2f; /* Black Gray */
+    color: #fff;
+  }
+  .container-fluid {
+    padding-top: 70px;
+    padding-bottom: 70px;
+  }
+  .navbar {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    border: 0;
+    border-radius: 0;
+    margin-bottom: 0;
+    font-size: 12px;
+    letter-spacing: 5px;
+  }
+  .navbar-nav  li a:hover {
+    color: #1abc9c !important;
+  }
+  .myClickState {
+  border-color: red;
+}
 
-<body style="background-color: white;">
-    <!-- 
-    TODO:
-        - LEGGENDA CON VALORI NEI PIE PLOT
-    -->
-    
-    <div id="testo_in">
 
-        <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
-            <a  >Inserisci dei valori tra 1 e 100 riferiti a quali di queste caratteristiche ti interessano di più</a>
+  </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-default"  style="background-color: #78A1BB;">
+        <div class="container">
+          <div class="navbar-header ">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>                        
+            </button>
+            <a class="navbar-brand" href="about_us.html">About Us</a>
+          </div>
+          <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav navbar-right">
+            <button class="btn btn-primary" onclick="javascript:apriMappa();">Apri Mappa</button> 
+            </ul>
+            
+          </div>
         </div>
+        </nav>
 
-        <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
-            <a  >0 vuol dire che non ti interessa mentre 100 vuol dire che è la caratteristica principale di interesse</a>
-        </div>
-
-        <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
-            <a  >Con 100 si mostreranno i migliori risultati per quella caratteristica</a>
-        </div>
+        <div class="container-fluid bg-3 text-left">
+             
+            <p>Inserisci i valori secondo le diverse propriet&aacute per ottenere una raccomandazione per lo stato che rispecchia le caratteristiche.
+                 <br>Per quanto riguarda la scala di interesse percentuale, minore &eacute il tasso minore sar&aacute l'interesse verso questa propriet&aacute.
+            </p>
+            <div id="testo_sec" style="display: none;">
         
-        <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center; ">
-            <a>Oppure scegli prima uno stato</a>
-            <button onclick="apriMappa()">Apri Mappa</button>
-        </div>
-    </div>
-
-
-    <div id="testo_sec" style="display: none;">
+                <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center; ">
+                    <a>Stato scelto:</a>
+                    <b id="nome_stato"></b>
+                </div>
         
-        <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center; ">
-            <a>Stato scelto:</a>
-            <b id="nome_stato"></b>
-        </div>
-
-        <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
-            <a  >Inserisci dei valori tra 1 e 100 riferiti a quali di queste caratteristiche ti interessano di più</a>
-        </div>
+                <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
+                    <a  >Inserisci dei valori tra 1 e 100 riferiti a quali di queste caratteristiche ti interessano di più</a>
+                </div>
+                
+            </div>
+            
+            <div style="margin: auto; display: none;" id="mappa" >
+                <div>
+                    <p  style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center; margin: auto;" >Seleziona lo stato dove vuoi trasferirti</p>
+                </div>
+                <div id="tool2" style="height: 80px; font-size: 30px; font-family: Arial, Helvetica, sans-serif;"></div>
+                <svg style=" width: 1500px;height: 1000px;  background-color: #a6c4cf;" id="map_svg"></svg>	
+            </div>
         
-    </div>
 
-    <div style="margin: auto; display: none;" id="mappa" >
-        <div>
-            <a  style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center; margin: auto;" >Seleziona lo stato dove vuoi trasferirti</a>
-        </div>
-        <div id="tool2" style="height: 80px; font-size: 30px; font-family: Arial, Helvetica, sans-serif;"></div>
-        <svg style=" width: 1500px;height: 1000px;  background-color: white;" id="map_svg"></svg>	
-    </div>
-
-<div style="margin: auto;font-family: Arial, Helvetica, sans-serif; margin-bottom: 30px; margin-top: 20px; display: none;" id="errore">
-    <b style="color: red;">Inserisci dei valori validi</b>
-</div>
-
-<div style="margin: auto;font-family: Arial, Helvetica, sans-serif; margin-bottom: 30px; margin-top: 20px;" id="parametri">
-    <form action="setParameters()" >
-        <div>
-            <b>Reddito Cercato: </b>
-            <input type="number" value="250000" min="2500"required max="250000" id="reddito_cercato"/>
-            <a>(Min: 2500$ - Max: 250000$)</a>
-        </div>
-        <div>
-            <b>Grado di Interesse Reddito: </b>
-            <input type="number" value="50" min="0"required max="100" id="input_redd"/>
-        </div>
-        <div>
-            <b> Grado di Interesse Tasso di Povertà: </b>
-            <input type="number" value="50" required min="0" max="100" id="input_pove"/>
-        </div>
-        <div>
-            <b>Grado di Interesse Tasso di Scolarizzazione: </b>
-            <input type="number" value="50" required min="0" max="100" id="input_scol"/>
-        </div>
-        <input type="button" value="Invia" onclick="setParameters()"/>
-    </form>
-</div>
-
-
-<div id ="barplot_d" style="display: none;">
-
-    <h2 style="font-family: Arial, Helvetica, sans-serif;">Migliori Risultati</h2>
-
-    <button onclick="update('Income')">Median Income</button>
-    <button onclick="update('Poverty')">Poverty Rate</button>
-    <button onclick="update('Highschool')">Highschool Rate</button>
+        <form action="setParameters()" >
+            <div class = "slidecontainer">
+                <b>Reddito Cercato: </b>
+                <input type="range" value="250000" min="2500"required max="250000" id ="reddito" 
+                oninput="document.getElementById('reddito_cercato').innerHTML = this.value" />
+                <label id="reddito_cercato"></label>
+                <a>(Min: 2500$ - Max: 250000$)</a>
+            </div>
+            <div>
+                <b>Grado di Interesse Reddito: </b>
+                <input type="range" value="50" min="0"required max="100" id="tasso"
+                oninput="document.getElementById('input_redd').innerHTML = this.value" />
+                <label id="input_redd"></label>
+            </div>
+            <div>
+                <b> Grado di Interesse Tasso di Povertà: </b>
+                <input type="range" value="50" required min="0" max="100" id="poverta"
+                oninput="document.getElementById('input_pove').innerHTML = this.value" />
+                <label id="input_pove"></label>
+            </div>
+            <div>
+                <b>Grado di Interesse Tasso di Scolarizzazione: </b>
+                <input type="range" value="50" required min="0" max="100" id="scolarizzazione"
+                oninput="document.getElementById('input_scol').innerHTML = this.value" />
+                <label id="input_scol"></label>
+            </div>
+            <input type="button" value="Invia" onclick="setParameters()" class="btn btn-primary"/>
+        </form>
     
-    <div style="margin: auto;" Id="my_dataviz">
-    </div>
-    
-</div>
-<div style="margin: auto;" >
-    <div style="margin: auto; display: none;" id="div1">
-        <div>
-            <b >Stato: </b>
-            <a id="state"></a>
-        </div>
-        <div>
-            <b >Città: </b>
-            <a id="city"></a>
-        </div>
-        <svg width="500" height="500" id="confronto"></svg>
-        <div style="text-align: center;">
-            <b >Poverty Rate: </b>
-            <a id="poverty"></a>
-        </div>
-        <div style="text-align: center;">
-            <b >Highschool Rate: </b>
-            <a id="highschool"></a>
-        </div>
-    </div>
-   
-    <div style="margin: auto; display: none;" id="div2" >
-        <div>
-            <b >Stato: </b>
-            <a id="state2"></a>
-        </div>
-        <div>
-            <b >Città: </b>
-            <a id="city2"></a>
-        </div>
-        <svg width="500" height="500" id="confronto2"></svg>
-        <div style="text-align: center;">
-            <b >Poverty Rate: </b>
-            <a id="poverty2"></a>
-        </div>
-        <div style="text-align: center;">
-            <b >Highschool Rate: </b>
-            <a id="highschool2"></a>
-        </div>
-    </div>
 
-    <div style="margin: auto; display: inline-block;" >
-        <svg id="leggenda"></svg>
-    </div>
-</div>
+        <div id ="barplot_d" style="display: none;">
 
-<div style="margin: auto; display: none; " id="conftext">
-    <h1 style="font-family: Arial, Helvetica, sans-serif; text-align: center;" >Confronto</h1>
-    <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
-        <a  >La citta </a>
-        <b  id="citystateA"> </b>
-        <a > rispetto alla citta </a>
-        <b  id="citystateB"> </b>
-        <a  > ha le seguenti caratteristiche </a>
-    </div>
+            <h2 id="testo"></h2>
+        
+            <button onclick="update('Income'); cambiaTesto('Migliori Risultati: Median Income');" class="btn btn-primary" >Median Income</button>
+            <button onclick="update('Poverty');cambiaTesto('Migliori Risultati: Poverty Rate');" class="btn btn-primary" >Poverty Rate</button>
+            <button onclick="update('Highschool'); cambiaTesto('Migliori Risultati: Highschool Rate');" class="btn btn-primary">Highschool Rate</button>
+            
+            <div style="margin: auto;" Id="my_dataviz">
+            </div>
+            
+        </div>
 
-    <div  style="margin-top: 30px; font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
-        <b >Median Income: </b>
-        <a id="conf_income"></a>
-    </div>
-    <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
-        <b >Poverty Rate: </b>
-        <a id="conf_poverty"></a>
-    </div>
+        
+        <div style="margin: auto;" >
+            <div style="margin: auto; display: none;" id="div1">
+                <div>
+                    <b >Stato: </b>
+                    <a id="state"></a>
+                </div>
+                <div>
+                    <b >Città: </b>
+                    <a id="city"></a>
+                </div>
+                <svg width="500" height="500" id="confronto"></svg>
+                <div style="text-align: center;">
+                    <b >Poverty Rate: </b>
+                    <a id="poverty"></a>
+                </div>
+                <div style="text-align: center;">
+                    <b >Highschool Rate: </b>
+                    <a id="highschool"></a>
+                </div>
+            </div>
+           
+            <div style="margin: auto; display: none;" id="div2" >
+                <div>
+                    <b >Stato: </b>
+                    <a id="state2"></a>
+                </div>
+                <div>
+                    <b >Città: </b>
+                    <a id="city2"></a>
+                </div>
+                <svg width="500" height="500" id="confronto2"></svg>
+                <div style="text-align: center;" id="#mydots">
+                    <b >Poverty Rate: </b>
+                    <a id="poverty2"></a>
+                </div>
+                <div style="text-align: center;">
+                    <b >Highschool Rate: </b>
+                    <a id="highschool2"></a>
+                </div>
+            </div>
+        </div>
 
-    <div style="font-size: 25px; font-family: Arial, Helvetica, sans-serif; text-align: center;">
-        <b >Highschool Rate: </b>
-        <a id="conf_highschool"></a>
-    </div>
+        <div style="margin: auto; display: none; " id="conftext">
+            <h1 style="text-align: center;" >Confronto</h1>
+            <div style="text-align: center;">
+                <a  >La citta </a>
+                <b  id="citystateA"> </b>
+                <a > rispetto alla citta </a>
+                <b  id="citystateB"> </b>
+                <a  > ha le seguenti caratteristiche </a>
+            </div>
+        
+            <div  style="margin-top: 30px; text-align: center;">
+                <b >Median Income: </b>
+                <a id="conf_income"></a>
+            </div>
+            <div style="font-size: 25px;  text-align: center;">
+                <b >Poverty Rate: </b>
+                <a id="conf_poverty"></a>
+            </div>
+        
+            <div style="font-size: 25px; text-align: center;">
+                <b >Highschool Rate: </b>
+                <a id="conf_highschool"></a>
+            </div>
 
-</div>
+           
+             
+        
+        </div>
 
-<script>
+        
+            
+            
+        </div>
+
+        
+
+  </body>
+
+  <script>
      
     var all_data;
     
@@ -224,7 +287,7 @@ function ready(error, topo) {
       .style("opacity", 1)
       .style("stroke", "black");
     tooltip
-      .html("<b>Stato: </b>" + d.properties.NAME + "<br>")
+      .html("<h3><b>Stato: </b>" + d.properties.NAME + "</h3><br>")
       .style("opacity", 1);
   }
 
@@ -296,10 +359,10 @@ function setParameters(){
     if (filtered_data == undefined)
         filtered_data = all_data;
 
-    var redd = parseFloat(document.getElementById("input_redd").value);
-    var scol = parseFloat(document.getElementById("input_scol").value);
-    var pove = parseFloat(document.getElementById("input_pove").value);
-    var inserted_income = parseFloat(document.getElementById("reddito_cercato").value);
+    var redd = parseFloat(document.getElementById("tasso").value);
+    var scol = parseFloat(document.getElementById("scolarizzazione").value);
+    var pove = parseFloat(document.getElementById("poverta").value);
+    var inserted_income = parseFloat(document.getElementById("reddito").value);
 
     if(redd<101 && redd>-1 && pove<101 && pove>-1 && scol<101 && scol>-1 && inserted_income>2499 && inserted_income<250001){
         // AVVIA EQUAZIONE PESATA CON I VALORI E MOSTRA BARPLOT
@@ -384,7 +447,7 @@ function setParameters(){
 
 
 // set the dimensions and margins of the graph
-var margin = {top: 30, right: 30, bottom: 70, left: 90},
+var margin = {top: 30, right: 30, bottom: 0, left: 90},
     width = 1000 - margin.left - margin.right,
     height = 800 - margin.top - margin.bottom;
 
@@ -416,21 +479,35 @@ var rightCity = null
 // A function that create / update the plot for a given variable:
 function update(selectedVar) {
 
+   
     // Parse the Data
     let click = function(d) {
+        var bool=true, cont=0;
+        while(cont<2){
+            d3.select(this).style("stroke","red").style("opacity",1)
+            cont++;
+           
+        }
+        
+        
         d3.select("#confronto").selectAll("*").remove();
         clickConfronto(d)
         d3.select("#div1").style("display", "inline-block");
         rightCity = d;
         updateConfronto()
+        
+        
+        
     }
-
+    
     let leftClick = function(d) {
+        d3.select(this).style("stroke","black").style("opacity",1)
         d3.select("#confronto2").selectAll("*").remove();
         leftClickConfronto(d)
         d3.select("#div2").style("display", "inline-block") ;
         leftCity = d;
         updateConfronto()
+        
     }
 
     var data = final_list;
@@ -463,7 +540,9 @@ function update(selectedVar) {
         .attr("y", function(d) { return y(d.City); })
         .attr("height", y.bandwidth())
         .attr("width", function(d) { return x(d[selectedVar]) ; })
-        .attr("fill", "#69b3a2");
+        .attr("fill", "#69b3a2")
+        
+        
 
         svg.selectAll(".bartext")
             .data(data)
@@ -483,13 +562,21 @@ function update(selectedVar) {
                 return d.City + ", " + d.State;
             });
 
+         
+
 }
+function cambiaTesto(newTesto) { //funzione che attiva il cambio del testo
+  document.getElementById("testo").innerHTML =newTesto;
+} 
+
+
 
 function clickConfronto(d) {
-
-
+ 
+     
+   
     var dat = {"White":d.White, "Black":d.Black, "Hispanic":d.Hispanic, "Asian":d.Asian, "Native":d.Native}
-
+    
     d3.select("#state")
         .text(d.State)
     d3.select("#city")
@@ -498,9 +585,10 @@ function clickConfronto(d) {
         .text(d.Poverty + "%")
     d3.select("#highschool")
         .text(d.Highschool + "%")
+   
     
-    var width = 500
-        height = 500
+    var width = 400
+        height = 400
         margin = 40
     var svg2 = d3.select("#confronto")
                 .append("g")
@@ -511,7 +599,7 @@ function clickConfronto(d) {
 // set the color scale
 var color = d3.scaleOrdinal()
   .domain(dat)
-  .range(["#1f77b4","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"]);
+  .range(["#1f77b4","#ff7f0e","#2ca02c","#d62728","#9467bd"]);
 
 // Compute the position of each group on the pie:
 var pie = d3.pie()
@@ -533,6 +621,30 @@ svg2
   .style("stroke-width", "2px")
   .style("opacity", 0.7)
 
+  var datas = ["White","Black","Hispanic","Asian","Native"]
+    var color = d3.scaleOrdinal()
+  .domain(datas)
+  .range(["#1f77b4","#ff7f0e","#2ca02c","#d62728","#9467bd"]);
+
+  svg2.selectAll("#mydots")
+    .data(datas)
+    .enter()
+    .append("circle")
+    .attr("cx", 180)
+    .attr("cy", function(d,i){ return 100 + i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+    .attr("r", 7)
+    .style("fill", function(d){ return color(d)})
+
+    svg2.selectAll("#mylabels")
+    .data(datas)
+    .enter()
+    .append("text")
+    .attr("x", 200)
+    .attr("y", function(d,i){ return 100 + i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+    .style("fill", function(d){ return color(d)})
+    .text(function(d){ return d})
+    .attr("text-anchor", "left")
+    .style("alignment-baseline", "middle")
 
 }
 
@@ -550,8 +662,8 @@ d3.select("#poverty2")
 d3.select("#highschool2")
     .text(d.Highschool + "%")
 
-var width = 500
-    height = 500
+var width = 400
+    height = 400
     margin = 40
 var svg2 = d3.select("#confronto2")
             .append("g")
@@ -562,7 +674,7 @@ var radius = Math.min(width, height) / 2 - margin
 // set the color scale
 var color = d3.scaleOrdinal()
 .domain(dat)
-.range(["#1f77b4","#ff7f0e","#2ca02c","#d62728","#9467bd","#8c564b","#e377c2","#7f7f7f","#bcbd22","#17becf"]);
+.range(["#1f77b4","#ff7f0e","#2ca02c","#d62728","#9467bd"]);
 
 // Compute the position of each group on the pie:
 var pie = d3.pie()
@@ -584,6 +696,25 @@ svg2
 .style("stroke-width", "2px")
 .style("opacity", 0.7)
 
+svg2.selectAll("#mydots")
+    .data(dat)
+    .enter()
+    .append("circle")
+    .attr("cx", 100)
+    .attr("cy", function(d,i){ return 100 + i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+    .attr("r", 7)
+    .style("fill", function(d){ return color(d)})
+
+    svg2.selectAll("#mylabels")
+    .data(dat)
+    .enter()
+    .append("text")
+    .attr("x", 120)
+    .attr("y", function(d,i){ return 100 + i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+    .style("fill", function(d){ return color(d)})
+    .text(function(d){ return d})
+    .attr("text-anchor", "left")
+    .style("alignment-baseline", "middle")
 }
 
 var colorePercentuale = d3.scaleQuantize()
@@ -599,6 +730,7 @@ function updateConfronto() {
     if (leftCity == null || rightCity == null){
         return;
     }
+
 
     d3.select("#conftext").style("display", "inline-block") ;
 
@@ -625,21 +757,16 @@ function updateConfronto() {
     d3.select("#conf_highschool")
         .text(highschool_p+"%")
         .style("color", colorePercentuale(highschool_p))
+    }
 
-}
+ // Add one dot in the legend for each name.
 
 
-// LEGGENDA DA FARE
-// var svg3 = d3.select("#leggenda");
-// svg3.append("circle").attr("r", 6).style("fill", "#377eb8")
-// svg3.append("circle").attr("r", 6).style("fill", "#4daf4a")
 
-// svg3.append("text").attr("x", 390).attr("y", 30).text("Locale").style("font-size", "15px").attr("alignment-baseline","middle")
-// svg3.append("text").attr("x", 390).attr("y", 60).text("Cluster C5").style("font-size", "15px").attr("alignment-baseline","middle")
-// svg3.append("text").attr("x", 390).attr("y", 90).text("Cluster M5").style("font-size", "15px").attr("alignment-baseline","middle")
+ 
+ 
 
-// Initialize plot
-// update('Income')
+
 
 function variazionePercentuale(valA, valB){
     var tot = (valA - valB)/valB;
@@ -651,8 +778,3 @@ function variazionePercentuale(valA, valB){
 }
 
 </script>
-
-
-
-
-</html>
