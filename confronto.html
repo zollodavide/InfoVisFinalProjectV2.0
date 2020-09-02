@@ -70,7 +70,7 @@
           </div>
           <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav navbar-right">
-            <button class="btn btn-primary" onclick="javascript:apriMappa();">Apri Mappa</button> 
+            <button id = "tasto_mappa" class="btn btn-primary" onclick="javascript:apriMappa();">Apri Mappa</button> 
             </ul>
             
           </div>
@@ -130,7 +130,7 @@
                 oninput="document.getElementById('input_scol').innerHTML = this.value" />
                 <label id="input_scol"></label>
             </div>
-            <input type="button" value="Invia" onclick="setParameters()" class="btn btn-primary"/>
+            <input id = "tasto_invia" type="button" value="Invia" onclick="setParameters()" class="btn btn-primary"/>
         </form>
     
 
@@ -356,6 +356,9 @@ var final_list = [];
 function setParameters(){
     // VALIDATE
 
+    d3.select("#tasto_invia").attr("disabled", true);
+    d3.select("#tasto_mappa").attr("disabled", true);
+
     if (filtered_data == undefined)
         filtered_data = all_data;
 
@@ -479,17 +482,11 @@ var rightCity = null
 // A function that create / update the plot for a given variable:
 function update(selectedVar) {
 
-   
     // Parse the Data
     let click = function(d) {
-        var bool=true, cont=0;
-        while(cont<2){
-            d3.select(this).style("stroke","red").style("opacity",1)
-            cont++;
-           
-        }
-        
-        
+
+        d3.selectAll('rect[style^="stroke: red;"]').style("stroke","transparent")   
+        d3.select(this).style("stroke","red").style("opacity",100)
         d3.select("#confronto").selectAll("*").remove();
         clickConfronto(d)
         d3.select("#div1").style("display", "inline-block");
@@ -501,7 +498,9 @@ function update(selectedVar) {
     }
     
     let leftClick = function(d) {
-        d3.select(this).style("stroke","black").style("opacity",1)
+
+        d3.selectAll('rect[style^="stroke: blue;"]').style("stroke","transparent")   
+        d3.select(this).style("stroke","blue").style("opacity",1)
         d3.select("#confronto2").selectAll("*").remove();
         leftClickConfronto(d)
         d3.select("#div2").style("display", "inline-block") ;
